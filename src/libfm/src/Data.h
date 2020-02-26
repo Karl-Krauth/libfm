@@ -22,11 +22,18 @@
 #ifndef DATA_H_
 #define DATA_H_
 
+#include <algorithm>
 #include <limits>
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <pybind11/eigen.h>
+#include <pybind11/pybind11.h>
 #include "../../util/matrix.h"
 #include "../../util/fmatrix.h"
 #include "../../fm_core/fm_data.h"
 #include "../../fm_core/fm_model.h"
+
+namespace py = pybind11;
 
 typedef FM_FLOAT DATA_FLOAT;
 
@@ -49,6 +56,8 @@ class DataMetaInfo {
 class Data {
  public:
   Data(uint64 cache_size, bool has_x, bool has_xt);
+  void set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
+                const py::EigenDRef<Eigen::VectorXd>& target);
   void load(std::string filename);
   void debug();
 
@@ -108,6 +117,40 @@ Data::Data(uint64 cache_size, bool has_x, bool has_xt) {
   this->cache_size = cache_size;
   this->has_x = has_x;
   this->has_xt = has_xt;
+}
+
+void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
+                    const py::EigenDRef<Eigen::VectorXd>& target) {
+  assert(target.size() == data.rows());
+  this->num_cases = data.rows();
+  this->num_feature = data.cols();
+  LargeSparseMatrixMemory<DATA_FLOAT>* mat = new LargeSparseMatrixMemory<DATA_FLOAT>;
+  this->data = mat;
+  mat->num_values = data.rows();
+  mat->num_cols = data.cols();
+  mat->data.setSize(data.rows());
+  for (uint i = 0; i < data.rows(); ++i) {
+    uint row_size = data.row(i).nonZeros();
+    mat->data(i).data = new sparse_entry<DATA_FLOAT>[row_size];
+    uint j = 0;
+    for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++j, ++it) {
+      mat->data(i).data[j].id = it.col();
+      mat->data(i).data[j].value = it.value();
+    }
+  }
+
+  if (this->has_xt) {
+    create_data_t();
+  }
+
+  this->min_target = +std::numeric_limits<DATA_FLOAT>::max();
+  this->max_target = std::numeric_limits<DATA_FLOAT>::lowest();
+  this->target.setSize(target.size());
+  for (uint i = 0; i < target.size(); ++i) {
+    this->target(i) = target(i);
+    this->min_target = std::min(this->min_target, (DATA_FLOAT)target(i));
+    this->max_target = std::max(this->max_target, (DATA_FLOAT)target(i));
+  }
 }
 
 void Data::load(std::string filename) {
