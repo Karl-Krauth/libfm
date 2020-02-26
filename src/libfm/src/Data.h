@@ -58,6 +58,8 @@ class Data {
   Data(uint64 cache_size, bool has_x, bool has_xt);
   void set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                 const py::EigenDRef<Eigen::VectorXd>& target);
+  void add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
+                const py::EigenDRef<Eigen::VectorXd>& target);
   void load(std::string filename);
   void debug();
 
@@ -150,6 +152,25 @@ void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
     this->target(i) = target(i);
     this->min_target = std::min(this->min_target, (DATA_FLOAT)target(i));
     this->max_target = std::max(this->max_target, (DATA_FLOAT)target(i));
+  }
+}
+
+void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
+                    const py::EigenDRef<Eigen::VectorXd>& target) {
+  assert(!this->has_xt);
+  // We are assuming our matrix will be in memory.
+  LargeSparseMatrixMemory<DATA_FLOAT>* mat = (LargeSparseMatrixMemory<DATA_FLOAT>*)this->data;
+  uint old_dim = mat->data.dim;
+  mat->num_values = old_dim + data.rows();
+  mat->data.resize(mat->num_values);
+  for (uint i = old_dim, j = 0; i < mat->num_values; ++i, ++j) {
+    uint row_size = data.row(j).nonZeros();
+    mat->data(i).data = new sparse_entry<DATA_FLOAT>[row_size];
+    uint k = 0;
+    for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++k, ++it) {
+      mat->data(i).data[k].id = it.col();
+      mat->data(i).data[k].value = it.value();
+    }
   }
 }
 

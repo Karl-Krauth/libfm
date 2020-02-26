@@ -74,6 +74,7 @@ template <typename T> class DVector {
   ~DVector();
 
   void setSize(uint p_dim);
+  void resize(uint p_dim);
 
   T get(uint x);
   T& operator() (unsigned x);
@@ -327,6 +328,23 @@ template <typename T> void DVector<T>::assign(DVector<T>& v) {
   for (uint i = 0; i < dim; i++) {
     value[i] = v.value[i];
   }
+}
+
+template <typename T> void DVector<T>::resize(uint p_dim) {
+  uint len = this->dim + p_dim;
+  T* new_value = new T[len];
+  for (uint i = 0; i < this->dim; ++i) {
+    new_value[i] = this->value[i];
+  }
+
+  if (value != NULL) {
+    MemoryLog::getInstance().logFree("dvector", sizeof(T), dim);
+    delete [] this->value;
+  }
+
+  this->dim = len;
+  MemoryLog::getInstance().logNew("dvector", sizeof(T), dim);
+  this->value = new_value;
 }
 
 template <typename T> void DVector<T>::save(std::string filename) {
