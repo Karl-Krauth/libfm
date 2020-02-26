@@ -1,5 +1,8 @@
 BIN_DIR := ../../bin/
 
+FLAGS := -O3 -Wall -std=c++17
+INCLUDES := `python3 -m pybind11 --includes` -I ./eigen/
+
 OBJECTS := \
 	libfm.o \
 	tools/transpose.o \
@@ -9,10 +12,10 @@ all: libFM transpose convert
 
 libFM: libfm.o
 	mkdir -p $(BIN_DIR)
-	g++ -O3 -Wall libfm.o -o $(BIN_DIR)libFM
+	g++ $(FLAGS) libfm.o -o $(BIN_DIR)libFM
 
 %.o: %.cpp
-	g++ -O3 -Wall -c $< -o $@
+	g++ $(FLAGS) $(INCLUDES) -c $< -o $@
 
 clean:	clean_lib
 	mkdir -p $(BIN_DIR)
@@ -24,9 +27,9 @@ clean_lib:
 
 transpose: tools/transpose.o
 	mkdir -p $(BIN_DIR)
-	g++ -O3 tools/transpose.o -o $(BIN_DIR)transpose
+	g++ $(FLAGS) tools/transpose.o -o $(BIN_DIR)transpose
 
 convert: tools/convert.o
 	mkdir -p $(BIN_DIR)
-	g++ -O3 tools/convert.o -o $(BIN_DIR)convert
+	g++ $(FLAGS) tools/convert.o -o $(BIN_DIR)convert
 
