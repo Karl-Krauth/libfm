@@ -158,6 +158,7 @@ void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
 void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                     const py::EigenDRef<Eigen::VectorXd>& target) {
   assert(!this->has_xt);
+  assert(target.size() == data.rows());
   // We are assuming our matrix will be in memory.
   LargeSparseMatrixMemory<DATA_FLOAT>* mat = (LargeSparseMatrixMemory<DATA_FLOAT>*)this->data;
   uint old_dim = mat->data.dim;
@@ -171,6 +172,13 @@ void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
       mat->data(i).data[k].id = it.col();
       mat->data(i).data[k].value = it.value();
     }
+  }
+
+  this->target.resize(old_dim + target.size());
+  for (uint i = old_dim, j = 0; i < this->target.dim; ++i, ++j) {
+    this->target(i) = target(j);
+    this->min_target = std::min(this->min_target, (DATA_FLOAT)target(j));
+    this->max_target = std::max(this->max_target, (DATA_FLOAT)target(j));
   }
 }
 
