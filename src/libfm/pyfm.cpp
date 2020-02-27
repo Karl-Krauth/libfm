@@ -16,16 +16,23 @@
 #include "src/fm_learn_mcmc_simultaneous.h"
 
 
-using namespace std;
-
-fm_learn* train_fm(Data& train, Data& validation, Data& test, const std::string& method, const vector<int>& dim,
-                   const vector<double>& reg, const vector<double>& lr = {}, const double init_stdev=0.1,
-                   const int num_iter=100, const int num_eval_cases=-1, const bool do_sampling=true,
-                   const bool do_multilevel=true, const std::string& r_log_str="", const int verbosity=0) {
-
+fm_learn* train_fm(Data* train, const std::string& method, const std::vector<int>& dim,
+                   Data* test=NULL, Data* validation=NULL, const std::vector<double>& lr={},
+                   const std::vector<double>& reg={}, const double init_stdev=0.1, const int num_iter=100,
+                   int num_eval_cases=-1, const bool do_sampling=true, const bool do_multilevel=true,
+                   const std::string& r_log_str="", const int verbosity=0) {
+  assert(train != NULL);
   // Setup the factorization machine
   fm_model* fm = new fm_model;
-  fm->num_attribute = num_all_attribute;
+  fm->num_attribute = train->num_feature;
+  if (test != NULL) {
+    fm->num_attribute = std::max((int)fm->num_attribute, test->num_feature);
+  }
+
+  if (validation != NULL) {
+    fm->num_attribute = std::max((int)fm->num_attribute, validation->num_feature);
+  }
+
   fm->init_stdev = init_stdev;
   // set the number of dimensions in the factorization
   assert(dim.size() == 3);
@@ -39,20 +46,22 @@ fm_learn* train_fm(Data& train, Data& validation, Data& test, const std::string&
   if (method == "sgd") {
     fml = new fm_learn_sgd_element();
     ((fm_learn_sgd*)fml)->num_iter = num_iter;
-
   } else if (method == "sgda") {
     assert(validation != NULL);
     fml = new fm_learn_sgd_element_adapt_reg();
     ((fm_learn_sgd*)fml)->num_iter = num_iter;
     ((fm_learn_sgd_element_adapt_reg*)fml)->validation = validation;
-
   } else if (method == "mcmc") {
-    fm.w.init_normal(fm.init_mean, fm.init_stdev);
+    fm->w.init_normal(fm->init_mean, fm->init_stdev);
     fml = new fm_learn_mcmc_simultaneous();
     fml->validation = validation;
     ((fm_learn_mcmc*)fml)->num_iter = num_iter;
     if (num_eval_cases == -1) {
-      num_eval_cases = test.num_cases
+      if (test == NULL) {
+        num_eval_cases = 0;
+      } else {
+        num_eval_cases = test->num_cases;
+      }
     }
 
     ((fm_learn_mcmc*)fml)->num_eval_cases = num_eval_cases;
@@ -62,17 +71,17 @@ fm_learn* train_fm(Data& train, Data& validation, Data& test, const std::string&
     throw "unknown method";
   }
   fml->fm = fm;
-  fml->max_target = train.max_target;
-  fml->min_target = train.min_target;
-  fml->meta = &meta;
+  fml->max_target = train->max_target;
+  fml->min_target = train->min_target;
+  fml->meta = new DataMetaInfo(fm->num_attribute);
   // Assume we only do regression.
   fml->task = 0;
 
   // Init the logging
   RLog* rlog = NULL;
   if (!r_log_str.empty()) {
-    ofstream* out_rlog = NULL;
-    out_rlog = new ofstream(r_log_str.c_str());
+    std::ofstream* out_rlog = NULL;
+    out_rlog = new std::ofstream(r_log_str.c_str());
     if (! out_rlog->is_open())  {
       throw "Unable to open file " + r_log_str;
     }
@@ -84,7 +93,7 @@ fm_learn* train_fm(Data& train, Data& validation, Data& test, const std::string&
   fml->init();
   if (method == "mcmc") {
     // set the regularization; for als and mcmc this can be individual per group
-    assert((reg.size() == 0) || (reg.size() == 1) || (reg.size() == 3) || (reg.size() == (1+meta.num_attr_groups*2)));
+    assert((reg.size() == 0) || (reg.size() == 1) || (reg.size() == 3) || (reg.size() == (1+fml->meta->num_attr_groups*2)));
     if (reg.size() == 0) {
       fm->reg0 = 0.0;
       fm->regw = 0.0;
@@ -108,11 +117,11 @@ fm_learn* train_fm(Data& train, Data& validation, Data& test, const std::string&
       fm->regw = 0.0;
       fm->regv = 0.0;
       int j = 1;
-      for (uint g = 0; g < meta.num_attr_groups; g++) {
+      for (uint g = 0; g < fml->meta->num_attr_groups; g++) {
         ((fm_learn_mcmc*)fml)->w_lambda(g) = reg[j];
         j++;
       }
-      for (uint g = 0; g < meta.num_attr_groups; g++) {
+      for (uint g = 0; g < fml->meta->num_attr_groups; g++) {
         for (int f = 0; f < fm->num_factor; f++) {
           ((fm_learn_mcmc*)fml)->v_lambda(g,f) = reg[j];
         }
@@ -159,16 +168,16 @@ fm_learn* train_fm(Data& train, Data& validation, Data& test, const std::string&
   }
 
   if (verbosity > 0) {
-    fm.debug();
+    fm->debug();
     fml->debug();
   }
 
   // learn
-  fml->learn(train, test);
+  fml->learn(*train, *test);
 
   //  Prediction at the end  (not for mcmc and als)
   if (method != "mcmc") {
-    std::cout << "Final\t" << "Train=" << fml->evaluate(train) << "\tTest=" << fml->evaluate(test) << std::endl;
+    std::cout << "Final\t" << "Train=" << fml->evaluate(*train) << "\tTest=" << fml->evaluate(*test) << std::endl;
   }
 
   return fml;
@@ -180,7 +189,7 @@ Eigen::VectorXd predict_fm(fm_learn* fml, Data& test) {
   fml->predict(test, pred);
   Eigen::VectorXd pred_vector(pred.dim);
   for (uint i = 0; i < pred.dim; ++i) {
-    pred_vector[i] = pred[i];
+    pred_vector[i] = pred(i);
   }
 
   return pred_vector;

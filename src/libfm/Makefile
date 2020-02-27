@@ -8,11 +8,14 @@ OBJECTS := \
 	tools/transpose.o \
 	tools/convert.o \
 
-all: libFM transpose convert
+all: libFM transpose convert pyfm
 
 libFM: libfm.o
 	mkdir -p $(BIN_DIR)
 	g++ $(FLAGS) libfm.o -o $(BIN_DIR)libFM
+
+pyfm:
+	g++ $(FLAGS) -shared -fPIC $(INCLUDES) pyfm.cpp -o $(BIN_DIR)pyfm`python3-config --extension-suffix`
 
 %.o: %.cpp
 	g++ $(FLAGS) $(INCLUDES) -c $< -o $@
@@ -23,7 +26,6 @@ clean:	clean_lib
 
 clean_lib:
 	rm -f $(OBJECTS)
-
 
 transpose: tools/transpose.o
 	mkdir -p $(BIN_DIR)
