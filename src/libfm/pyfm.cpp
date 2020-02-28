@@ -182,11 +182,10 @@ void PyFM::train(std::shared_ptr<Data> train,
     }
   }
 
-  train->debug();
-  std::cout << "BBBB" << std::endl;
   this->fml->max_target = train->max_target;
   this->fml->min_target = train->min_target;
   this->meta = DataMetaInfo(this->fm.num_attribute);
+  this->meta.num_relations = train->relation.dim;
   this->fml->init();
   if (this->verbosity > 0) {
     this->fm.debug();
@@ -195,10 +194,10 @@ void PyFM::train(std::shared_ptr<Data> train,
 
   // learn
   this->fml->learn(*train, *test);
-  std::cout << "GGGG" << std::endl;
 
   //  Prediction at the end  (not for mcmc and als)
   if (method != "mcmc") {
+    // TODO: need to init test if it's null.
     std::cout << "Final\t" << "Train=" << this->fml->evaluate(*train) << "\tTest=" <<
       this->fml->evaluate(*test) << std::endl;
   }

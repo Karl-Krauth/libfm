@@ -158,6 +158,8 @@ void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
 
 void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                     const Eigen::VectorXd& target) {
+  // TODO: this is currently broken add_rows doesn't work since it assumed mat->num_values is the number of rows.
+  // also it doesn't initialize the row size.
   assert(!this->has_xt);
   assert(target.size() == data.rows());
   // We are assuming our matrix will be in memory.
