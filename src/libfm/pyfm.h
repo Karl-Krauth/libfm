@@ -74,7 +74,7 @@ PYBIND11_MODULE(pyfm, m) {
          &PyFM::predict,
          py::arg("test") = nullptr);
 
-  py::class_<Data>(m, "Data")
+  py::class_<Data, std::shared_ptr<Data>>(m, "Data")
     .def(py::init<uint64, bool, bool>(),
          py::arg("cache_size"),
          py::arg("has_x"),

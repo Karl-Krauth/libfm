@@ -57,9 +57,9 @@ class Data {
  public:
   Data(uint64 cache_size, bool has_x, bool has_xt);
   void set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
-                const py::EigenDRef<Eigen::VectorXd>& target);
+                const Eigen::VectorXd& target);
   void add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
-                const py::EigenDRef<Eigen::VectorXd>& target);
+                const Eigen::VectorXd& target);
   void load(std::string filename);
   void debug();
 
@@ -122,7 +122,7 @@ Data::Data(uint64 cache_size, bool has_x, bool has_xt) {
 }
 
 void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
-                    const py::EigenDRef<Eigen::VectorXd>& target) {
+                    const Eigen::VectorXd& target) {
   assert(target.size() == data.rows());
   this->num_cases = data.rows();
   this->num_feature = data.cols();
@@ -156,7 +156,7 @@ void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
 }
 
 void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
-                    const py::EigenDRef<Eigen::VectorXd>& target) {
+                    const Eigen::VectorXd& target) {
   assert(!this->has_xt);
   assert(target.size() == data.rows());
   // We are assuming our matrix will be in memory.
