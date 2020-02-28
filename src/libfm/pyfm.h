@@ -1,8 +1,13 @@
-#include <Eigen/Dense>
 #include <memory>
 #include <string>
 
+#include <Eigen/Dense>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
 #include "src/Data.h"
+
+namespace py = pybind11;
 
 class PyFM {
  public:
@@ -34,3 +39,38 @@ class PyFM {
   fm_model fm;
   std::unique_ptr<fm_learn> fml;
 };
+
+
+PYBIND11_MODULE(pyfm, m) {
+  py::class_<PyFM>(m, "PyFM")
+    .def(py::init<const std::string&,
+                  const std::vector<int>&,
+                  const std::vector<double>&,
+                  const std::vector<double>&,
+                  const double,
+                  const int,
+                  const int,
+                  const bool,
+                  const bool,
+                  const std::string&,
+                  const int>(),
+         py::arg("method"),
+         py::arg("dim"),
+         py::arg("lr") = std::vector<double>(),
+         py::arg("reg") = std::vector<double>(),
+         py::arg("init_stdev") = 0.1,
+         py::arg("num_iter") = 100,
+         py::arg("num_eval_cases") = -1,
+         py::arg("do_sampling") = true,
+         py::arg("do_multilevel") = true,
+         py::arg("r_log_str") = "",
+         py::arg("verbosity") = 0)
+    .def("train",
+         &PyFM::train,
+         py::arg("train"),
+         py::arg("test") = nullptr,
+         py::arg("validation") = nullptr)
+    .def("predict",
+         &PyFM::predict,
+         py::arg("test") = nullptr);
+}
