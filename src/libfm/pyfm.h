@@ -73,4 +73,18 @@ PYBIND11_MODULE(pyfm, m) {
     .def("predict",
          &PyFM::predict,
          py::arg("test") = nullptr);
+
+  py::class_<Data>(m, "Data")
+    .def(py::init<uint64, bool, bool>(),
+         py::arg("cache_size"),
+         py::arg("has_x"),
+         py::arg("has_xt"))
+    .def("set_data",
+         &Data::set_data,
+         py::arg("data"),
+         py::arg("target"))
+    .def("add_rows",
+         &Data::add_rows,
+         py::arg("data"),
+         py::arg("target"));
 }
