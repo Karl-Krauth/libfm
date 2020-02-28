@@ -128,12 +128,13 @@ void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
   this->num_feature = data.cols();
   LargeSparseMatrixMemory<DATA_FLOAT>* mat = new LargeSparseMatrixMemory<DATA_FLOAT>;
   this->data = mat;
-  mat->num_values = data.rows();
+  mat->num_values = data.nonZeros();
   mat->num_cols = data.cols();
   mat->data.setSize(data.rows());
   for (uint i = 0; i < data.rows(); ++i) {
     uint row_size = data.row(i).nonZeros();
     mat->data(i).data = new sparse_entry<DATA_FLOAT>[row_size];
+    mat->data(i).size = row_size;
     uint j = 0;
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++j, ++it) {
       mat->data(i).data[j].id = it.col();
