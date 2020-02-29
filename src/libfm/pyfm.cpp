@@ -170,10 +170,13 @@ void PyFM::train(std::shared_ptr<Data> train,
                  std::shared_ptr<Data> test,
                  std::shared_ptr<Data> validation) {
   assert(train != nullptr);
-  this->fm.num_attribute = train->num_feature;
-  if (test != nullptr) {
-    this->fm.num_attribute = std::max((int)this->fm.num_attribute, test->num_feature);
+  if (test == nullptr) {
+    test = std::make_shared<Data>(Eigen::SparseMatrix<double, Eigen::RowMajor>(0, 0),
+                                  Eigen::VectorXd(0));
   }
+
+  this->fm.num_attribute = train->num_feature;
+  this->fm.num_attribute = std::max((int)this->fm.num_attribute, test->num_feature);
 
   if (validation != nullptr) {
     this->fm.num_attribute = std::max((int)this->fm.num_attribute, validation->num_feature);
