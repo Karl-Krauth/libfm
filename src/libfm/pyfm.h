@@ -75,14 +75,12 @@ PYBIND11_MODULE(pyfm, m) {
          py::arg("test") = nullptr);
 
   py::class_<Data, std::shared_ptr<Data>>(m, "Data")
-    .def(py::init<uint64, bool, bool>(),
-         py::arg("cache_size"),
-         py::arg("has_x"),
-         py::arg("has_xt"))
-    .def("set_data",
-         &Data::set_data,
+    .def(py::init<const Eigen::SparseMatrix<double, Eigen::RowMajor>&,
+                  const Eigen::VectorXd&,
+                  bool>(),
          py::arg("data"),
-         py::arg("target"))
+         py::arg("target"),
+         py::arg("has_xt") = false)
     .def("add_rows",
          &Data::add_rows,
          py::arg("data"),

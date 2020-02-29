@@ -56,15 +56,15 @@ class DataMetaInfo {
 class Data {
  public:
   Data(uint64 cache_size, bool has_x, bool has_xt);
-  void set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
-                const Eigen::VectorXd& target);
+  Data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
+       const Eigen::VectorXd& target, bool has_xt=false);
   void add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                 const Eigen::VectorXd& target);
   void load(std::string filename);
   void debug();
 
-  LargeSparseMatrix<DATA_FLOAT>* data_t;
-  LargeSparseMatrix<DATA_FLOAT>* data;
+  LargeSparseMatrix<DATA_FLOAT>* data_t = nullptr;
+  LargeSparseMatrix<DATA_FLOAT>* data = nullptr;
   DVector<DATA_FLOAT> target;
 
   int num_feature;
@@ -78,9 +78,9 @@ class Data {
  protected:
   void create_data_t();
 
-  uint64 cache_size;
-  bool has_xt;
-  bool has_x;
+  uint64 cache_size = 0;
+  bool has_xt = false;
+  bool has_x = true;
 };
 
 // Implementation
@@ -114,15 +114,14 @@ void DataMetaInfo::debug() {
 }
 
 Data::Data(uint64 cache_size, bool has_x, bool has_xt) {
-  this->data_t = NULL;
-  this->data = NULL;
   this->cache_size = cache_size;
   this->has_x = has_x;
   this->has_xt = has_xt;
 }
 
-void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
-                    const Eigen::VectorXd& target) {
+Data::Data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
+           const Eigen::VectorXd& target, bool has_xt) {
+  this->has_xt = has_xt;
   assert(target.size() == data.rows());
   this->num_cases = data.rows();
   this->num_feature = data.cols();
