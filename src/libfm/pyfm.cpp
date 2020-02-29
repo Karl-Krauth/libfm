@@ -35,8 +35,11 @@ PyFM::PyFM(const std::string& method,
   // Setup the factorization machine
   this->fm = fm_model();
   this->fm.init_stdev = init_stdev;
+
+  if (dim.size() != 3) {
+    throw "Dim needs to be a list of size 3.";
+  }
   // Set the number of dimensions in the factorization machine.
-  assert(dim.size() == 3);
   this->fm.k0 = dim[0] != 0;
   this->fm.k1 = dim[1] != 0;
   this->fm.num_factor = dim[2];
@@ -77,7 +80,11 @@ PyFM::PyFM(const std::string& method,
   this->fml->log = rlog.get();
   if (method == "mcmc") {
     // set the regularization; for als and mcmc this can be individual per group
-    assert((reg.size() == 0) || (reg.size() == 1) || (reg.size() == 3) || (reg.size() == (1+this->fml->meta->num_attr_groups*2)));
+    if ((reg.size() != 0) && (reg.size() != 1) && (reg.size() != 3) &&
+        (reg.size() != (1+this->fml->meta->num_attr_groups*2))) {
+      throw "Regularization for mcmc is of incorrect size.";
+    }
+
     if (reg.size() == 0) {
       this->fm.reg0 = 0.0;
       this->fm.regw = 0.0;
@@ -114,7 +121,10 @@ PyFM::PyFM(const std::string& method,
     }
   } else {
     // set the regularization; for standard SGD, groups are not supported
-    assert((reg.size() == 0) || (reg.size() == 1) || (reg.size() == 3));
+    if ((reg.size() != 0) && (reg.size() != 1) && (reg.size() != 3)) {
+      throw "For SGD regularization list size needs to be 0, 1, or 3.";
+    }
+
     if (reg.size() == 0) {
       this->fm.reg0 = 0.0;
       this->fm.regw = 0.0;
@@ -134,7 +144,10 @@ PyFM::PyFM(const std::string& method,
     if (fmlsgd) {
       // set the learning rates (individual per layer)
       {
-        assert((lr.size() == 1) || (lr.size() == 3));
+        if ((lr.size() != 1) && (lr.size() != 3)) {
+          throw "Learning rate needs to have size 1 or 3 for SGD.";
+        }
+
         if (lr.size() == 1) {
           fmlsgd->learn_rate = lr[0];
           fmlsgd->learn_rates.init(lr[0]);
@@ -169,7 +182,9 @@ void PyFM::train(std::shared_ptr<Data> train,
   this->fm.init();
 
   if (this->method == "sgda") {
-    assert(validation != nullptr);
+    if (validation == nullptr) {
+      throw "Need to provide a validation set when doing sgda.";
+    }
     ((fm_learn_sgd_element_adapt_reg*)this->fml.get())->validation = validation.get();
   } else if (this->method == "mcmc") {
     this->fml->validation = validation.get();
