@@ -158,18 +158,25 @@ void Data::set_data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
 
 void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                     const Eigen::VectorXd& target) {
-  // TODO: this is currently broken add_rows doesn't work since it assumed mat->num_values is the number of rows.
-  // also it doesn't initialize the row size.
-  assert(!this->has_xt);
-  assert(target.size() == data.rows());
+  if (this->has_xt) {
+    throw "add_rows does not currently support Data with transposes.";
+  }
+
+  if (target.size() != data.rows()) {
+    throw "Data and target did not have matching dims. " +
+          std::to_string(data.rows()) + " vs. " + std::to_string(target.size());
+  }
+
+  uint old_dim = this->num_cases;
+  this->num_cases = this->num_cases + data.rows();
   // We are assuming our matrix will be in memory.
-  LargeSparseMatrixMemory<DATA_FLOAT>* mat = (LargeSparseMatrixMemory<DATA_FLOAT>*)this->data;
-  uint old_dim = mat->data.dim;
-  mat->num_values = old_dim + data.rows();
-  mat->data.resize(mat->num_values);
-  for (uint i = old_dim, j = 0; i < mat->num_values; ++i, ++j) {
+  LargeSparseMatrixMemory<DATA_FLOAT>* mat = dynamic_cast<LargeSparseMatrixMemory<DATA_FLOAT>*>(this->data);
+  mat->num_values = mat->num_values + data.nonZeros();
+  mat->data.resize(this->num_cases);
+  for (uint i = old_dim, j = 0; i < this->num_cases; ++i, ++j) {
     uint row_size = data.row(j).nonZeros();
     mat->data(i).data = new sparse_entry<DATA_FLOAT>[row_size];
+    mat->data(i).size = row_size;
     uint k = 0;
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++k, ++it) {
       mat->data(i).data[k].id = it.col();
@@ -177,7 +184,7 @@ void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
     }
   }
 
-  this->target.resize(old_dim + target.size());
+  this->target.resize(this->num_cases);
   for (uint i = old_dim, j = 0; i < this->target.dim; ++i, ++j) {
     this->target(i) = target(j);
     this->min_target = std::min(this->min_target, (DATA_FLOAT)target(j));
