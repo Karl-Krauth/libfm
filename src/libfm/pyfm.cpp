@@ -112,7 +112,7 @@ void PyFM::train(std::shared_ptr<Data> train,
   assert(train != nullptr);
   if (test == nullptr) {
     test = std::make_shared<Data>(Eigen::SparseMatrix<double, Eigen::RowMajor>(0, 0),
-                                  Eigen::VectorXd(0));
+                                  Eigen::VectorXd(0), true);
   }
 
   this->fm.num_attribute = train->num_feature;
@@ -132,11 +132,7 @@ void PyFM::train(std::shared_ptr<Data> train,
   } else if (this->method == "mcmc") {
     this->fml->validation = validation.get();
     if (this->num_eval_cases == -1) {
-      if (test == nullptr) {
-        ((fm_learn_mcmc*)this->fml.get())->num_eval_cases = 0;
-      } else {
-        ((fm_learn_mcmc*)this->fml.get())->num_eval_cases = test->num_cases;
-      }
+      ((fm_learn_mcmc*)this->fml.get())->num_eval_cases = 0;
     }
   }
 
