@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <vector>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <pybind11/eigen.h>
@@ -58,12 +59,12 @@ class Data {
   Data(uint64 cache_size, bool has_x, bool has_xt);
   Data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
        const Eigen::VectorXd& target, bool has_xt=false);
+  ~Data();
   void add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                 const Eigen::VectorXd& target);
   void load(std::string filename);
   void debug();
 
-  // TODO: we need to free these at the end.
   LargeSparseMatrix<DATA_FLOAT>* data_t = nullptr;
   LargeSparseMatrix<DATA_FLOAT>* data = nullptr;
   DVector<DATA_FLOAT> target;
@@ -82,6 +83,11 @@ class Data {
   uint64 cache_size = 0;
   bool has_xt = false;
   bool has_x = true;
+  // This is a hack since the original version of libfm doesn't free
+  // the sparse entries and they're initialized differently to the way
+  // we initialize them for pyfm. As a patch we keep track of the
+  // allocated sparse entries in unique_ptrs.
+  std::vector<sparse_entry<DATA_FLOAT>*> to_free;
 };
 
 // Implementation
@@ -134,6 +140,7 @@ Data::Data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
   for (uint i = 0; i < data.rows(); ++i) {
     uint row_size = data.row(i).nonZeros();
     mat->data(i).data = new sparse_entry<DATA_FLOAT>[row_size];
+    this->to_free.push_back(mat->data(i).data);
     mat->data(i).size = row_size;
     uint j = 0;
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++j, ++it) {
@@ -156,6 +163,16 @@ Data::Data(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
   }
 }
 
+Data::~Data() {
+  for (auto ptr : to_free) {
+    delete ptr;
+  }
+
+  // We need to try to delete the data by considering both possible child classes.
+  delete this->data;
+  delete this->data_t;
+}
+
 void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                     const Eigen::VectorXd& target) {
   if (this->has_xt) {
@@ -176,6 +193,7 @@ void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
   for (uint i = old_dim, j = 0; i < this->num_cases; ++i, ++j) {
     uint row_size = data.row(j).nonZeros();
     mat->data(i).data = new sparse_entry<DATA_FLOAT>[row_size];
+    this->to_free.push_back(mat->data(i).data);
     mat->data(i).size = row_size;
     uint k = 0;
     for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++k, ++it) {
@@ -318,6 +336,7 @@ void Data::load(std::string filename) {
 
   MemoryLog::getInstance().logNew("data_float", sizeof(sparse_entry<DATA_FLOAT>), num_values);
   sparse_entry<DATA_FLOAT>* cache = new sparse_entry<DATA_FLOAT>[num_values];
+  this->to_free.push_back(cache);
 
   // (2) read the data
   {
@@ -401,6 +420,7 @@ void Data::create_data_t() {
   // create data structure for values
   MemoryLog::getInstance().logNew("data_float", sizeof(sparse_entry<DATA_FLOAT>), num_values);
   sparse_entry<DATA_FLOAT>* cache = new sparse_entry<DATA_FLOAT>[num_values];
+  this->to_free.push_back(cache);
   long long cache_id = 0;
   for (uint i = 0; i < data_t.dim; i++) {
     data_t.value[i].data = &(cache[cache_id]);

@@ -59,6 +59,7 @@ template <typename T> class LargeSparseMatrix {
   virtual uint getNumRows() = 0; // get the number of Rows
   virtual uint getNumCols() = 0; // get the number of Cols
   virtual uint64 getNumValues() = 0; // get the number of Values
+  virtual ~LargeSparseMatrix();
 
   void saveToBinaryFile(std::string filename);
 
