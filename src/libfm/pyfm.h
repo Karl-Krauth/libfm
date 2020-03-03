@@ -31,6 +31,7 @@ class PyFM {
 
  private:
   const std::string method;
+  const std::vector<double> reg;
   const int num_eval_cases;
   const int verbosity;
   DataMetaInfo meta = DataMetaInfo(0);

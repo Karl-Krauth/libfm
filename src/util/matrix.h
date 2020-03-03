@@ -79,10 +79,11 @@ template <typename T> class DVector {
   T get(uint x);
   T& operator() (unsigned x);
   T operator() (unsigned x) const;
+  DVector<T>& operator=(const DVector<T>& vec);
 
   void init(T v);
   void assign(T* v);
-  void assign(DVector<T>& v);
+  void assign(const DVector<T>& v);
 
   void save(std::string filename);
   void saveToBinaryFile(std::string filename);
@@ -274,6 +275,11 @@ template <typename T> DVector<T>::DVector() {
   value = NULL;
 }
 
+template <typename T> DVector<T>& DVector<T>::operator=(const DVector<T>& vec) {
+  this->assign(vec);
+  return *this;
+}
+
 template <typename T> DVector<T>::DVector(uint p_dim) {
   dim = 0;
   value = NULL;
@@ -323,7 +329,7 @@ template <typename T> void DVector<T>::assign(T* v) {
   }
 }
 
-template <typename T> void DVector<T>::assign(DVector<T>& v) {
+template <typename T> void DVector<T>::assign(const DVector<T>& v) {
   if (v.dim != dim) { setSize(v.dim); }
   for (uint i = 0; i < dim; i++) {
     value[i] = v.value[i];

@@ -63,6 +63,7 @@ class Data {
   void load(std::string filename);
   void debug();
 
+  // TODO: we need to free these at the end.
   LargeSparseMatrix<DATA_FLOAT>* data_t = nullptr;
   LargeSparseMatrix<DATA_FLOAT>* data = nullptr;
   DVector<DATA_FLOAT> target;

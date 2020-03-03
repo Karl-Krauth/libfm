@@ -30,6 +30,7 @@ PyFM::PyFM(const std::string& method,
            const std::string& r_log_str,
            const int verbosity) :
            method{method},
+           reg{reg},
            num_eval_cases{num_eval_cases},
            verbosity{verbosity} {
   // Setup the factorization machine
@@ -78,67 +79,6 @@ PyFM::PyFM(const std::string& method,
   }
 
   this->fml->log = rlog.get();
-  if (method == "mcmc") {
-    // set the regularization; for als and mcmc this can be individual per group
-    if ((reg.size() != 0) && (reg.size() != 1) && (reg.size() != 3) &&
-        (reg.size() != (1+this->fml->meta->num_attr_groups*2))) {
-      throw "Regularization for mcmc is of incorrect size.";
-    }
-
-    if (reg.size() == 0) {
-      this->fm.reg0 = 0.0;
-      this->fm.regw = 0.0;
-      this->fm.regv = 0.0;
-      ((fm_learn_mcmc*)this->fml.get())->w_lambda.init(this->fm.regw);
-      ((fm_learn_mcmc*)this->fml.get())->v_lambda.init(this->fm.regv);
-    } else if (reg.size() == 1) {
-      this->fm.reg0 = reg[0];
-      this->fm.regw = reg[0];
-      this->fm.regv = reg[0];
-      ((fm_learn_mcmc*)this->fml.get())->w_lambda.init(this->fm.regw);
-      ((fm_learn_mcmc*)this->fml.get())->v_lambda.init(this->fm.regv);
-    } else if (reg.size() == 3) {
-      this->fm.reg0 = reg[0];
-      this->fm.regw = reg[1];
-      this->fm.regv = reg[2];
-      ((fm_learn_mcmc*)this->fml.get())->w_lambda.init(this->fm.regw);
-      ((fm_learn_mcmc*)this->fml.get())->v_lambda.init(this->fm.regv);
-    } else {
-      this->fm.reg0 = reg[0];
-      this->fm.regw = 0.0;
-      this->fm.regv = 0.0;
-      int j = 1;
-      for (uint g = 0; g < this->fml->meta->num_attr_groups; g++) {
-        ((fm_learn_mcmc*)this->fml.get())->w_lambda(g) = reg[j];
-        j++;
-      }
-      for (uint g = 0; g < this->fml->meta->num_attr_groups; g++) {
-        for (int f = 0; f < this->fm.num_factor; f++) {
-          ((fm_learn_mcmc*)this->fml.get())->v_lambda(g,f) = reg[j];
-        }
-        j++;
-      }
-    }
-  } else {
-    // set the regularization; for standard SGD, groups are not supported
-    if ((reg.size() != 0) && (reg.size() != 1) && (reg.size() != 3)) {
-      throw "For SGD regularization list size needs to be 0, 1, or 3.";
-    }
-
-    if (reg.size() == 0) {
-      this->fm.reg0 = 0.0;
-      this->fm.regw = 0.0;
-      this->fm.regv = 0.0;
-    } else if (reg.size() == 1) {
-      this->fm.reg0 = reg[0];
-      this->fm.regw = reg[0];
-      this->fm.regv = reg[0];
-    } else {
-      this->fm.reg0 = reg[0];
-      this->fm.regw = reg[1];
-      this->fm.regv = reg[2];
-    }
-  }
   {
     fm_learn_sgd* fmlsgd = dynamic_cast<fm_learn_sgd*>(this->fml.get());
     if (fmlsgd) {
@@ -208,6 +148,68 @@ void PyFM::train(std::shared_ptr<Data> train,
   if (this->verbosity > 0) {
     this->fm.debug();
     this->fml->debug();
+  }
+
+  if (method == "mcmc") {
+    // set the regularization; for als and mcmc this can be individual per group
+    if ((this->reg.size() != 0) && (this->reg.size() != 1) && (this->reg.size() != 3) &&
+        (this->reg.size() != (1+this->fml->meta->num_attr_groups*2))) {
+      throw "Regularization for mcmc is of incorrect size.";
+    }
+
+    if (this->reg.size() == 0) {
+      this->fm.reg0 = 0.0;
+      this->fm.regw = 0.0;
+      this->fm.regv = 0.0;
+      ((fm_learn_mcmc*)this->fml.get())->w_lambda.init(this->fm.regw);
+      ((fm_learn_mcmc*)this->fml.get())->v_lambda.init(this->fm.regv);
+    } else if (this->reg.size() == 1) {
+      this->fm.reg0 = this->reg[0];
+      this->fm.regw = this->reg[0];
+      this->fm.regv = this->reg[0];
+      ((fm_learn_mcmc*)this->fml.get())->w_lambda.init(this->fm.regw);
+      ((fm_learn_mcmc*)this->fml.get())->v_lambda.init(this->fm.regv);
+    } else if (this->reg.size() == 3) {
+      this->fm.reg0 = this->reg[0];
+      this->fm.regw = this->reg[1];
+      this->fm.regv = this->reg[2];
+      ((fm_learn_mcmc*)this->fml.get())->w_lambda.init(this->fm.regw);
+      ((fm_learn_mcmc*)this->fml.get())->v_lambda.init(this->fm.regv);
+    } else {
+      this->fm.reg0 = this->reg[0];
+      this->fm.regw = 0.0;
+      this->fm.regv = 0.0;
+      int j = 1;
+      for (uint g = 0; g < this->fml->meta->num_attr_groups; g++) {
+        ((fm_learn_mcmc*)this->fml.get())->w_lambda(g) = this->reg[j];
+        j++;
+      }
+      for (uint g = 0; g < this->fml->meta->num_attr_groups; g++) {
+        for (int f = 0; f < this->fm.num_factor; f++) {
+          ((fm_learn_mcmc*)this->fml.get())->v_lambda(g,f) = this->reg[j];
+        }
+        j++;
+      }
+    }
+  } else {
+    // set the regularization; for standard SGD, groups are not supported
+    if ((this->reg.size() != 0) && (this->reg.size() != 1) && (this->reg.size() != 3)) {
+      throw "For SGD regularization list size needs to be 0, 1, or 3.";
+    }
+
+    if (this->reg.size() == 0) {
+      this->fm.reg0 = 0.0;
+      this->fm.regw = 0.0;
+      this->fm.regv = 0.0;
+    } else if (this->reg.size() == 1) {
+      this->fm.reg0 = this->reg[0];
+      this->fm.regw = this->reg[0];
+      this->fm.regv = this->reg[0];
+    } else {
+      this->fm.reg0 = this->reg[0];
+      this->fm.regw = this->reg[1];
+      this->fm.regv = this->reg[2];
+    }
   }
 
   // learn
