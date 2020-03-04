@@ -59,7 +59,7 @@ template <typename T> class LargeSparseMatrix {
   virtual uint getNumRows() = 0; // get the number of Rows
   virtual uint getNumCols() = 0; // get the number of Cols
   virtual uint64 getNumValues() = 0; // get the number of Values
-  virtual ~LargeSparseMatrix();
+  virtual ~LargeSparseMatrix() = 0;
 
   void saveToBinaryFile(std::string filename);
 
@@ -70,6 +70,7 @@ template <typename T> class LargeSparseMatrixHD : public LargeSparseMatrix<T> {
  public:
   LargeSparseMatrixHD(std::string filename, uint64 cache_size);
   // ~LargeSparseMatrixHD() { in.close(); }
+  virtual ~LargeSparseMatrixHD() {};
 
   virtual uint getNumRows();
   virtual uint getNumCols();
@@ -111,6 +112,7 @@ template <typename T> class LargeSparseMatrixMemory : public LargeSparseMatrix<T
   virtual uint getNumRows();
   virtual uint getNumCols();
   virtual uint64 getNumValues();
+  virtual ~LargeSparseMatrixMemory() {};
   // void loadFromTextFile(std::string filename);
 
   DVector< sparse_row<T> > data;
@@ -122,6 +124,8 @@ template <typename T> class LargeSparseMatrixMemory : public LargeSparseMatrix<T
 };
 
 // Implementation
+template <typename T> LargeSparseMatrix<T>::~LargeSparseMatrix() {}
+
 template <typename T> void LargeSparseMatrix<T>::saveToBinaryFile(std::string filename) {
   std::cout << "printing to " << filename << std::endl; std::cout.flush();
   std::ofstream out(filename.c_str(), std::ios_base::out | std::ios_base::binary);

@@ -196,7 +196,7 @@ void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
     this->to_free.push_back(mat->data(i).data);
     mat->data(i).size = row_size;
     uint k = 0;
-    for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, i); it; ++k, ++it) {
+    for (Eigen::SparseMatrix<double, Eigen::RowMajor>::InnerIterator it(data, j); it; ++k, ++it) {
       mat->data(i).data[k].id = it.col();
       mat->data(i).data[k].value = it.value();
     }

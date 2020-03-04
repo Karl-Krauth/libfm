@@ -337,7 +337,7 @@ template <typename T> void DVector<T>::assign(const DVector<T>& v) {
 }
 
 template <typename T> void DVector<T>::resize(uint p_dim) {
-  uint len = this->dim + p_dim;
+  uint len = p_dim;
   T* new_value = new T[len];
   for (uint i = 0; i < this->dim; ++i) {
     new_value[i] = this->value[i];
