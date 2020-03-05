@@ -213,7 +213,6 @@ void PyFM::train(std::shared_ptr<Data> train,
 
   //  Prediction at the end  (not for mcmc and als)
   if (method != "mcmc") {
-    // TODO: need to init test if it's null.
     std::cout << "Final\t" << "Train=" << this->fml->evaluate(*train) << "\tTest=" <<
       this->fml->evaluate(*test) << std::endl;
   }
@@ -229,4 +228,36 @@ Eigen::VectorXd PyFM::predict(std::shared_ptr<Data> test) {
   }
 
   return pred_vector;
+}
+
+std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> PyFM::parameters() {
+  std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> ret;
+
+  // Copy the global bias.
+  std::get<0>(ret) = 0;
+  if (this->fm.k0) {
+    std::get<0>(ret) = this->fm.w0;
+  }
+
+  // Copy the unary interactions.
+  if (this->fm.k1) {
+    Eigen::VectorXd weights(this->fm.num_attribute);
+    for (uint i = 0; i < this->fm.num_attribute; ++i) {
+      weights(i) = this->fm.w(i);
+    }
+
+    std::get<1>(ret) = weights;
+  }
+
+  // Copy the pairwise interactions.
+  Eigen::VectorXd pairwise(this->fm.num_attribute * this->fm.num_factor);
+  for (uint i = 0, j = 0; i < this->fm.num_attribute; ++i) {
+    for (int f = 0; f < this->fm.num_factor; ++f, ++j) {
+      pairwise(j) = this->fm.v(f, i);
+    }
+  }
+
+  std::get<2>(ret) = pairwise;
+
+  return ret;
 }

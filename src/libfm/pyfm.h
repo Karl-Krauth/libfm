@@ -29,6 +29,8 @@ class PyFM {
 
   Eigen::VectorXd predict(std::shared_ptr<Data> test);
 
+  std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> parameters();
+
  private:
   const std::string method;
   const std::vector<double> reg;
@@ -73,7 +75,9 @@ PYBIND11_MODULE(pyfm, m) {
          py::arg("validation") = nullptr)
     .def("predict",
          &PyFM::predict,
-         py::arg("test") = nullptr);
+         py::arg("test") = nullptr)
+    .def("parameters",
+         &PyFM::parameters);
 
   py::class_<Data, std::shared_ptr<Data>>(m, "Data")
     .def(py::init<const Eigen::SparseMatrix<double, Eigen::RowMajor>&,
