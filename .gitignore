@@ -30,3 +30,7 @@ bin
 
 # Vim files
 *.swp
+
+# Python files
+/**/__pycache__/
+
