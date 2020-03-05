@@ -20,13 +20,11 @@
 
 PyFM::PyFM(const std::string& method,
            const std::vector<int>& dim,
-           const std::vector<double>& lr,
+           const double lr,
            const std::vector<double>& reg,
            const double init_stdev,
            const int num_iter,
            const int num_eval_case,
-           const bool do_sampling,
-           const bool do_multilevel,
            const std::string& r_log_str,
            const int verbosity) :
            method{method},
@@ -52,12 +50,13 @@ PyFM::PyFM(const std::string& method,
   } else if (method == "sgda") {
     this->fml = std::make_unique<fm_learn_sgd_element_adapt_reg>();
     ((fm_learn_sgd*)this->fml.get())->num_iter = num_iter;
-  } else if (method == "mcmc") {
+  } else if (method == "mcmc" || method == "als") {
+    bool is_mcmc = method == "mcmc";
     this->fml = std::make_unique<fm_learn_mcmc_simultaneous>();
     this->fm.w.init_normal(this->fm.init_mean, this->fm.init_stdev);
     ((fm_learn_mcmc*)this->fml.get())->num_iter = num_iter;
-    ((fm_learn_mcmc*)this->fml.get())->do_sample = do_sampling;
-    ((fm_learn_mcmc*)this->fml.get())->do_multilevel = do_multilevel;
+    ((fm_learn_mcmc*)this->fml.get())->do_sample = is_mcmc;
+    ((fm_learn_mcmc*)this->fml.get())->do_multilevel = is_mcmc;
   } else {
     throw "Unknown method.";
   }
@@ -83,21 +82,8 @@ PyFM::PyFM(const std::string& method,
     fm_learn_sgd* fmlsgd = dynamic_cast<fm_learn_sgd*>(this->fml.get());
     if (fmlsgd) {
       // set the learning rates (individual per layer)
-      {
-        if ((lr.size() != 1) && (lr.size() != 3)) {
-          throw "Learning rate needs to have size 1 or 3 for SGD.";
-        }
-
-        if (lr.size() == 1) {
-          fmlsgd->learn_rate = lr[0];
-          fmlsgd->learn_rates.init(lr[0]);
-        } else {
-          fmlsgd->learn_rate = 0;
-          fmlsgd->learn_rates(0) = lr[0];
-          fmlsgd->learn_rates(1) = lr[1];
-          fmlsgd->learn_rates(2) = lr[2];
-        }
-      }
+      fmlsgd->learn_rate = lr;
+      fmlsgd->learn_rates.init(lr);
     }
   }
 
