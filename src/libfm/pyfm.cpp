@@ -230,8 +230,8 @@ Eigen::VectorXd PyFM::predict(std::shared_ptr<Data> test) {
   return pred_vector;
 }
 
-std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> PyFM::parameters() {
-  std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> ret;
+std::tuple<double, Eigen::VectorXd, Eigen::MatrixXd> PyFM::parameters() {
+  std::tuple<double, Eigen::VectorXd, Eigen::MatrixXd> ret;
 
   // Copy the global bias.
   std::get<0>(ret) = 0;
@@ -250,10 +250,10 @@ std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> PyFM::parameters() {
   }
 
   // Copy the pairwise interactions.
-  Eigen::VectorXd pairwise(this->fm.num_attribute * this->fm.num_factor);
-  for (uint i = 0, j = 0; i < this->fm.num_attribute; ++i) {
-    for (int f = 0; f < this->fm.num_factor; ++f, ++j) {
-      pairwise(j) = this->fm.v(f, i);
+  Eigen::MatrixXd pairwise(this->fm.num_attribute, this->fm.num_factor);
+  for (uint i = 0; i < this->fm.num_attribute; ++i) {
+    for (int f = 0; f < this->fm.num_factor; ++f) {
+      pairwise(i, f) = this->fm.v(f, i);
     }
   }
 

@@ -29,7 +29,7 @@ class PyFM {
 
   Eigen::VectorXd predict(std::shared_ptr<Data> test);
 
-  std::tuple<double, Eigen::VectorXd, Eigen::VectorXd> parameters();
+  std::tuple<double, Eigen::VectorXd, Eigen::MatrixXd> parameters();
 
  private:
   const std::string method;
