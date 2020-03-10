@@ -19,7 +19,8 @@ class PyFM {
        const int num_iter=100,
        const int num_eval_cases=-1,
        const std::string& r_log_str="",
-       const int verbosity=0);
+       const int verbosity=0,
+       const int seed=0);
 
   void train(std::shared_ptr<Data> train,
              std::shared_ptr<Data> test=nullptr,
@@ -52,6 +53,7 @@ PYBIND11_MODULE(pyfm, m) {
                   const int,
                   const int,
                   const std::string&,
+                  const int,
                   const int>(),
          py::arg("method"),
          py::arg("dim"),
@@ -61,7 +63,8 @@ PYBIND11_MODULE(pyfm, m) {
          py::arg("num_iter") = 100,
          py::arg("num_eval_cases") = -1,
          py::arg("r_log_str") = "",
-         py::arg("verbosity") = 0)
+         py::arg("verbosity") = 0,
+         py::arg("seed") = 0)
     .def("train",
          &PyFM::train,
          py::arg("train"),

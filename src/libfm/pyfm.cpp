@@ -26,11 +26,15 @@ PyFM::PyFM(const std::string& method,
            const int num_iter,
            const int num_eval_case,
            const std::string& r_log_str,
-           const int verbosity) :
+           const int verbosity,
+           const int seed) :
            method{method},
            reg{reg},
            num_eval_cases{num_eval_cases},
            verbosity{verbosity} {
+  // Setup the random seed.
+  srand(seed);
+
   // Setup the factorization machine
   this->fm = fm_model();
   this->fm.init_stdev = init_stdev;
