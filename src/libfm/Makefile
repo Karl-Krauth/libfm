@@ -1,4 +1,5 @@
 BIN_DIR := ../../bin/
+PY_DIR := ../../pyfm
 
 FLAGS := -O3 -Wall -std=c++17
 INCLUDES := `python3 -m pybind11 --includes` -I ./eigen/
@@ -15,7 +16,7 @@ libFM: libfm.o
 	g++ $(FLAGS) libfm.o -o $(BIN_DIR)libFM
 
 pyfm:
-	g++ $(FLAGS) -shared -fPIC $(INCLUDES) pyfm.cpp -o $(BIN_DIR)pyfm`python3-config --extension-suffix`
+	g++ $(FLAGS) -shared -fPIC $(INCLUDES) pyfm.cpp -o $(PY_DIR)pyfm`python3-config --extension-suffix`
 
 %.o: %.cpp
 	g++ $(FLAGS) $(INCLUDES) -c $< -o $@
