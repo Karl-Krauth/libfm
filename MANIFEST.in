@@ -1,1 +1,3 @@
 include wpyfm/pyfm*
+include src
+include Makefile
