@@ -1,7 +1,7 @@
 BIN_DIR := ../../bin/
-PY_DIR := ../../pyfm
+PY_DIR := ../../pyfm/
 
-FLAGS := -O3 -Wall -std=c++17
+FLAGS := -O3 -Wall -std=c++17 -Wl,-undefined,dynamic_lookup
 INCLUDES := `python3 -m pybind11 --includes` -I ./eigen/
 
 OBJECTS := \
@@ -24,6 +24,7 @@ pyfm:
 clean:	clean_lib
 	mkdir -p $(BIN_DIR)
 	rm -f $(BIN_DIR)libFM $(BIN_DIR)convert $(BIN_DIR)transpose
+	rm -f $(PY_DIR)pyfm`python3-config --extension-suffix`
 
 clean_lib:
 	rm -f $(OBJECTS)

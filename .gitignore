@@ -34,3 +34,5 @@ bin
 # Python files
 /**/__pycache__/
 
+# Setup files
+pyfm.egg-info

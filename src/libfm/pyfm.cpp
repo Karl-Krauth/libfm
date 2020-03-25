@@ -24,7 +24,7 @@ PyFM::PyFM(const std::string& method,
            const std::vector<double>& reg,
            const double init_stdev,
            const int num_iter,
-           const int num_eval_case,
+           const int num_eval_cases,
            const std::string& r_log_str,
            const int verbosity,
            const int seed) :
