@@ -1,5 +1,5 @@
 BIN_DIR := ../../bin/
-PY_DIR := ../../bin/
+PY_DIR := ../../pyfm/
 
 FLAGS := -O3 -Wall -std=c++17 -Wl,-undefined,dynamic_lookup
 INCLUDES := `python3 -m pybind11 --includes` -I ./eigen/
