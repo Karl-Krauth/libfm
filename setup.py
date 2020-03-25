@@ -25,6 +25,7 @@ setup(
     author_email='karl.krauth@gmail.com',
     description='A pybind11 wrapper for libfm.',
     packages=find_packages(),
+    data_files=['pyfm', ['bin/pyfm*']]
     cmdclass={
         'install': CustomInstallCommand,
         'develop': CustomDevelopCommand,
