@@ -12,7 +12,7 @@ class CustomBuildCommand(build_py):
 
 
 setup(
-    name='pyfm',
+    name='wpyfm',
     version='0.0.1',
     author='Karl Krauth',
     author_email='karl.krauth@gmail.com',
