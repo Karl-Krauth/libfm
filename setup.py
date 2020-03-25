@@ -8,14 +8,14 @@ from setuptools.command.install import install
 
 class CustomInstallCommand(install):
     def run(self):
-        install.run(self)
         subprocess.check_call(['make'])
+        install.run(self)
 
 
 class CustomDevelopCommand(develop):
     def run(self):
-        develop.run(self)
         subprocess.check_call(['make'])
+        develop.run(self)
 
 
 setup(
