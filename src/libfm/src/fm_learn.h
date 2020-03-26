@@ -31,6 +31,7 @@
 class fm_learn {
  public:
   fm_learn();
+  virtual ~fm_learn() = default;
   virtual void init();
   virtual double evaluate(Data& data);
   virtual void learn(Data& train, Data& test);

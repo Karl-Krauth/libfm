@@ -44,6 +44,8 @@
 
 
 class fm_learn_mcmc_simultaneous : public fm_learn_mcmc {
+ public:
+  virtual ~fm_learn_mcmc_simultaneous() = default;
  protected:
   virtual void _learn(Data& train, Data& test);
   void _evaluate(DVector<double>& pred, DVector<DATA_FLOAT>& target, double normalizer, double& rmse, double& mae, uint from_case, uint to_case);

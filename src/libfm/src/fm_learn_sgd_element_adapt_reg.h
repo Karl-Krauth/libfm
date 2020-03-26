@@ -42,6 +42,8 @@
 
 class fm_learn_sgd_element_adapt_reg: public fm_learn_sgd {
  public:
+  virtual ~fm_learn_sgd_element_adapt_reg() = default;
+
   virtual void init();
 
   void sgd_theta_step(sparse_row<FM_FLOAT>& x, const DATA_FLOAT target);

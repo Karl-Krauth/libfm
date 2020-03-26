@@ -32,6 +32,7 @@
 
 class fm_learn_sgd: public fm_learn {
  public:
+  virtual ~fm_learn_sgd() = default;
   virtual void init();
   virtual void learn(Data& train, Data& test);
   void SGD(sparse_row<DATA_FLOAT> &x, const double multiplier, DVector<double> &sum);

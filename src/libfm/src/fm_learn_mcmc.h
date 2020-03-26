@@ -60,6 +60,8 @@ struct relation_cache {
 
 class fm_learn_mcmc : public fm_learn {
  public:
+  virtual ~fm_learn_mcmc();
+
   virtual double evaluate(Data& data);
 
   virtual void init();
@@ -127,13 +129,23 @@ class fm_learn_mcmc : public fm_learn {
   DVector<double> pred_sum_all_but5;
   DVector<double> pred_this;
 
-  e_q_term* cache;
-  e_q_term* cache_test;
+  e_q_term* cache = nullptr;
+  e_q_term* cache_test = nullptr;
 
   DVector<relation_cache*> rel_cache;
 };
 
 // Implementation
+fm_learn_mcmc::~fm_learn_mcmc() {
+  if (this->cache != nullptr) {
+    delete this->cache;
+  }
+
+  if (this->cache_test != nullptr) {
+    delete this->cache_test;
+  }
+}
+
 double fm_learn_mcmc::evaluate(Data& data) {
   return std::numeric_limits<double>::quiet_NaN();
 }

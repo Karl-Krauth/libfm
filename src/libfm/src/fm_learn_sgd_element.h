@@ -32,6 +32,7 @@
 
 class fm_learn_sgd_element: public fm_learn_sgd {
  public:
+  virtual ~fm_learn_sgd_element() = default;
   virtual void init();
   virtual void learn(Data& train, Data& test);
 };
