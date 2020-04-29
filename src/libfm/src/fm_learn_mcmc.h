@@ -137,13 +137,8 @@ class fm_learn_mcmc : public fm_learn {
 
 // Implementation
 fm_learn_mcmc::~fm_learn_mcmc() {
-  if (this->cache != nullptr) {
-    delete this->cache;
-  }
-
-  if (this->cache_test != nullptr) {
-    delete this->cache_test;
-  }
+  delete this->cache;
+  delete this->cache_test;
 }
 
 double fm_learn_mcmc::evaluate(Data& data) {
@@ -1208,8 +1203,10 @@ void fm_learn_mcmc::learn(Data& train, Data& test) {
   }
   MemoryLog::getInstance().logFree("e_q_term", sizeof(e_q_term), test.num_cases);
   delete[] cache_test;
+  this->cache_test = nullptr;
   MemoryLog::getInstance().logFree("e_q_term", sizeof(e_q_term), train.num_cases);
   delete[] cache;
+  this->cache = nullptr;
 }
 
 void fm_learn_mcmc::debug() {
