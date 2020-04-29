@@ -175,10 +175,6 @@ Data::~Data() {
 
 void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
                     const Eigen::VectorXd& target) {
-  if (this->has_xt) {
-    throw "add_rows does not currently support Data with transposes.";
-  }
-
   if (target.size() != data.rows()) {
     throw "Data and target did not have matching dims. " +
           std::to_string(data.rows()) + " vs. " + std::to_string(target.size());

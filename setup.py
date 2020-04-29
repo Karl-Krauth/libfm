@@ -13,11 +13,11 @@ class CustomBuildCommand(build_py):
 
 setup(
     name='wpyfm',
-    version='0.1.6',
+    version='0.1.7',
     author='Karl Krauth',
     author_email='karl.krauth@gmail.com',
     description='A pybind11 wrapper for libfm.',
-    download_url= 'https://github.com/Karl-Krauth/libfm/archive/v0.1.6.tar.gz',
+    download_url= 'https://github.com/Karl-Krauth/libfm/archive/v0.1.7.tar.gz',
     packages=find_packages(),
     include_package_data=True,
     cmdclass={
