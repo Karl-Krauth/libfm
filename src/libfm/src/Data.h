@@ -208,6 +208,10 @@ void Data::add_rows(const Eigen::SparseMatrix<double, Eigen::RowMajor>& data,
     this->min_target = std::min(this->min_target, (DATA_FLOAT)target(j));
     this->max_target = std::max(this->max_target, (DATA_FLOAT)target(j));
   }
+
+  if (this->has_xt) {
+    create_data_t();
+  }
 }
 
 void Data::load(std::string filename) {
@@ -394,7 +398,8 @@ void Data::create_data_t() {
   // for creating transpose data, the data has to be memory-data because we use random access
   DVector< sparse_row<DATA_FLOAT> >& data = ((LargeSparseMatrixMemory<DATA_FLOAT>*)this->data)->data;
 
-  data_t = new LargeSparseMatrixMemory<DATA_FLOAT>();
+  delete this->data_t;
+  this->data_t = new LargeSparseMatrixMemory<DATA_FLOAT>();
 
   DVector< sparse_row<DATA_FLOAT> >& data_t = ((LargeSparseMatrixMemory<DATA_FLOAT>*)this->data_t)->data;
 
